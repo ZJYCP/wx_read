@@ -22,7 +22,7 @@ from utils import EntryUrl
 
 class APIS:
     # API: 阅读（扫码后跳转的链接） - 程序自动提取
-    GET_READ_URL = "/read_task/gru"
+    GET_READ_URL = "/read_task/ggg3"
     # API: do_read（目前默认是这个） - 程序自动提取
     DO_READ = "/read_task/do_read"
     # API: 提款页面
@@ -44,9 +44,12 @@ class YRYDV2(WxReadTaskBase):
     CURRENT_TASK_NAME = "鱼儿阅读"
 
     # 提取主页源代码中的阅读情况（目前仅提取ID、余额、已读篇数、阅读规则、扫码后跳转的API、获取成功阅读链接后的type参数）
+    # HOMEPAGE_COMPILE = re.compile(
+    #     r"<p.*?>【ID:(.*?)】余额.*?(\d+\.*\d*)元.*?p>今日已读(\d+)篇[,，].*?</p>.*?p.*?>(每小时.*?)</p>.*?show_qrcode.*?is_make_qrcode.*?get\(['\"](.*?)['\"].*?var.*?['\"]&type=(\d+)['\"]",
+    #     re.S)
     HOMEPAGE_COMPILE = re.compile(
-        r"<p.*?>【ID:(.*?)】余额.*?(\d+\.*\d*)元.*?p>今日已读(\d+)篇[,，].*?</p>.*?p.*?>(每小时.*?)</p>.*?show_qrcode.*?is_make_qrcode.*?get\(['\"](.*?)['\"].*?var.*?['\"]&type=(\d+)['\"]",
-        re.S)
+    r"ID:(\d+).*?余额：([\d.]+)元.*?今日已读(\d+)篇，([\d.]+)元/每篇.*?每小时一轮，每轮(\d+)个文章，每天(\d+)轮",
+    re.S)
     # 判断是否是链接格式
     LINK_MATCH_COMPILE = re.compile(r"^https?://[^\s/$.?#].\S*$")
     # 提取阅读跳转主页中的数据（do_read API、do_read部分参数、部分参数随机数特征）
@@ -155,16 +158,17 @@ class YRYDV2(WxReadTaskBase):
                 f"> 用户 ID: {r.group(1)}",
                 f"> 当前余额: {r.group(2)}",
                 f"> 今日已读: {self.current_read_count}",
-                f"> 阅读规则: {r.group(4)}"
+                f"> 阅读规则: 每篇{r.group(4)}，每轮{r.group(5)}篇，每天{r.group(6)}轮"
             ]))
 
             if not self.run_read_task:
                 self.__request_withdraw()
                 return
 
-            # 覆盖原API
-            APIS.GET_READ_URL = r.group(5)
-            _type = r.group(6)
+            # 覆盖原API (原代码做了混淆，所以这里不再提取)
+            # APIS.GET_READ_URL = r.group(5)
+            # _type = r.group(6)
+            _type = 7
             turn_count = self.current_read_count // 30 + 1
             self.logger.war(f"🟡 当前是第[{turn_count}]轮阅读")
             self.__start_read(_type, turn_count)

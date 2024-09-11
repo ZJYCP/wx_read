@@ -440,10 +440,11 @@ class WxReadTaskBase(ABC):
     def request_for_redirect(self, url: str | URL, prefix: str, *args, client: httpx.Client = None, **kwargs) -> URL:
         """获取重定向链接"""
         update_headers = kwargs.pop("update_headers", {})
+        url = "https://h5.v2dx6gzdx5.cn/pqwek/dajbie"
         return self._request("GET", url, prefix, *args, client=client, update_headers={
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/wxpic,image/tpg,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
             **update_headers,
-        }, ret_types=RetTypes.REDIRECT, **kwargs)
+        }, ret_types=RetTypes.JSON, **kwargs).get("jump")
 
     def _request(self, method: str, url: str | URL, prefix: str, *args, client: httpx.Client = None,
                  update_headers: dict = None,

@@ -82,14 +82,19 @@ class KLYDV2(WxReadTaskBase):
         return EntryUrl.get_klrd_entry_url()[0]
 
     def init_fields(self, retry_count=3):
+        auth_info = {"udtauth12": self.auth_info}
+        self.base_client.headers.update(auth_info)
+        self.main_client.headers.update(auth_info)
+        self.read_client.headers.update(auth_info)
         first_redirect_url: URL = self.__request_entry_for_redirect()
         self.base_url = f"{first_redirect_url.scheme}://{first_redirect_url.host}"
         self.base_full_url = first_redirect_url
 
     def run(self, name, *args, **kwargs):
-        self.base_client.base_url = self.base_url
+        self.base_client.base_url = "https://m.zzyi4cf7z8.cn" #self.base_url
         self.logger.info(f"开始执行{NestedLogColors.red(name)}的任务")
-        homepage_url: URL = self.__request_redirect_for_redirect()
+        # homepage_url: URL = self.__request_redirect_for_redirect()
+        homepage_url: URL = self.base_full_url
         self.logger.debug(f"homepage_url：{homepage_url}")
 
         # 观看抓包数据流，貌似下方的请求可有可无，无所谓，判断一下也好
@@ -126,18 +131,20 @@ class KLYDV2(WxReadTaskBase):
             self.logger.info(f"获取加载页链接成功: {self.load_page_url}")
             # 获取加载页面源代码
             read_load_page_html: str = self.__request_for_read_load_page(self.load_page_url)
-            forstr, zs, r_js_path, r_js_version = self.__parse_read_load_page(read_load_page_html)
-            self.logger.debug(f"r_js_path：{r_js_path}")
-            self.logger.debug(f"r_js_version：{r_js_version}")
-            if self.CURRENT_R_JS_VERSION != r_js_version:
-                raise ExitWithCodeChange("r_js_version")
-            # 设置read_client的base_url
-            self.read_client.base_url = f"{self.load_page_url.scheme}://{self.load_page_url.host}"
-            r_js_code = self.__request_r_js_code(r_js_path)
-            if self.R_JS_CODE_MD5 != md5(r_js_code):
-                raise ExitWithCodeChange("r_js_code")
+            self.iu = self.load_page_url.params.get("iu")
+            # forstr, zs, r_js_path, r_js_version = self.__parse_read_load_page(read_load_page_html)
+            # self.logger.debug(f"r_js_path：{r_js_path}")
+            # self.logger.debug(f"r_js_version：{r_js_version}")
+            # if self.CURRENT_R_JS_VERSION != r_js_version:
+            #     raise ExitWithCodeChange("r_js_version")
+            # # 设置read_client的base_url
+            # self.read_client.base_url = f"{self.load_page_url.scheme}://{self.load_page_url.host}"
+            # r_js_code = self.__request_r_js_code(r_js_path)
+            # if self.R_JS_CODE_MD5 != md5(r_js_code):
+            #     raise ExitWithCodeChange("r_js_code")
             # 解析完成阅读的链接
-            do_read_url_part_path = self.__parse_r_js_code(r_js_code, forstr, zs)
+            # do_read_url_part_path = self.__parse_r_js_code(r_js_code, forstr, zs)
+            do_read_url_part_path = "https://m.zzyi4cf7z8.cn/dodoaa/mmaa?a=1"
             do_read_url_full_path = self.__build_do_read_url_path(do_read_url_part_path)
             # 尝试通过检测并且开始阅读
             self.__pass_detect_and_read_v2(do_read_url_part_path, do_read_url_full_path)
@@ -151,6 +158,10 @@ class KLYDV2(WxReadTaskBase):
         except (WithdrawFailed, NoSuchArticle) as e:
             self.logger.war(e)
             self.is_need_withdraw = False
+        except Exception as e:
+            self.logger.error(e)
+            self.is_need_withdraw = False
+            sys.exit(0)
         finally:
             if self.is_need_withdraw:
                 self.__request_withdraw()
@@ -902,6 +913,10 @@ class KLYDV2(WxReadTaskBase):
     @property
     def load_page_url(self):
         return self._cache.get(f"load_page_url_{self.ident}")
+    
+    @property
+    def auth_info(self):
+        return self.config_data.udtauth12
 
     @load_page_url.setter
     def load_page_url(self, value):

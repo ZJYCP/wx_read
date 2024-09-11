@@ -32,6 +32,7 @@ class CommonKLYDConfig(BaseModel):
 class KLYDAccount(CommonPartConfig, CommonKLYDConfig):
     """账号配置（局部配置）"""
     cookie: str
+    udtauth12: str | None = Field(None, description="账号鉴权信息")
 
 
 class BaseKLYDGlobalConfig(CommonGlobalConfig, CommonKLYDConfig):
